@@ -78,7 +78,7 @@ Supporting observation: Lody's generated profile patch contains
 
 This disables only the base-wide `@deepseek-ai/dsh-agent-instructions` row. The bundled `standard`, `ptc`, and `cordis` presets re-mount it inside the agent scope, which is why workspace instruction files still load in those presets and not in `minimal`.
 
-A reproducible guide for the working `AGENTS.md` channel, its load order and byte budget, and the acceptance checks used above is available at <link to be filled after publishing>.
+A reproducible guide for the working `AGENTS.md` channel, its load order and byte budget, and the acceptance checks used above: https://github.com/ltx15382710886-png/lody-dsh-notion-memory
 
 ## Before submitting
 
