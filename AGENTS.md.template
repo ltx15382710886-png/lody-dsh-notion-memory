@@ -1,0 +1,105 @@
+# <Project> Notion Memory Policy
+
+Policy ID: <POLICY_ID>
+
+Use the Notion MCP as cross-session memory. Do not enable or rely on a native memory store instead.
+
+Current repository code, current configuration, and actual runtime behavior are the first source of truth for code and environment facts. Memory supplies user preferences, people, cross-session decisions and their background only; it must never override newer, more specific current facts.
+
+## Recall at the start of every session
+
+Before answering the first user request of a session — even when it is only "hello" — do both:
+
+1. Read the Notion MCP resource `notion://docs/memory`. Once per session is enough.
+2. Call the Notion MCP `fetch` with `id: "memory"` to read the About page and the Memories database.
+
+Do not wait for the user to mention Notion, memory, preferences, or history. Do not guess memory contents from the tool descriptions alone.
+
+Also call `memory-search` after `fetch id="memory"` when:
+
+- The user asks about "before", "last time", "continue", "usually", "what we decided".
+- The user asks about working preferences, role, goals, project decisions and reasons, owners, deadlines, people, or long-lived constraints.
+- The task depends on a decision made in another session, or needs the user's established preference.
+- The user asks to recall, change, or forget something.
+
+Search by topic and synonyms rather than copying the whole question. When memory informs the answer, cite the returned Notion link inline.
+
+When the About page and a specific memory disagree, use the newer and more specific one. When memory disagrees with current repository or runtime behavior, the latter wins; say so explicitly. Never answer current code facts from memory.
+
+If Notion is temporarily unavailable, say in one sentence that recall did not complete and continue the task. Do not fabricate a read, and do not retry every turn.
+
+## When to save
+
+When the user explicitly says "remember this" or "forget this", follow the Notion memory flow.
+
+Otherwise, save only information the user has explicitly stated or confirmed that is durable and not obvious:
+
+- Profile: role, team, expertise, long-term goals.
+- Preference: stable working preferences, corrected approaches, confirmed choices.
+- Work: cross-session project decisions and reasons, owners, deadlines, long-lived constraints, where important resources live.
+- People: collaborators and how they work with the user.
+- Notes: durable items that fit nowhere else.
+
+Always skip, even if the user asks to save everything just discussed:
+
+- Temporary progress, one-off answers, small talk, unconfirmed guesses, generic advice.
+- Code, diffs, command output, full error text, repository docs, manifests, dependencies, scripts.
+- Facts already visible in the current repository, configuration, profile, or runtime logs — versions, model routes, plugin inventories, file contents, install state.
+- Plans, ticket details, procedures, and troubleshooting steps that can be regenerated.
+- Tokens, API keys, OAuth material, credentials, and connection secrets.
+- A "preference" inferred from a single action.
+
+Save the reason behind a decision and stable pointers to resources, not a copy of the resource's current contents. A reusable procedure belongs in a skill or project doc; memory keeps the link.
+
+## Exact save procedure
+
+1. If this session has not read `notion://docs/memory`, read it first.
+2. Run `memory-search` with the topic and synonyms; `fetch` likely matches to read them fully.
+3. Search does not prove the library has no duplicate. When in doubt, use the data source URL returned by `fetch id="memory"` and list entries with `query-data-sources`.
+4. The same topic must update the existing page. Never create a second page for different wording.
+5. Use targeted updates that preserve unrelated content; never let an older decision overwrite a newer one.
+6. Create only when no page covers the topic:
+   - `create-pages`
+   - `parent: "memory"`
+   - no `creation_mode`; never a plain private draft
+   - `Type` exactly one of `Profile`, `Preference`, `Work`, `People`, `Notes`
+   - title states the topic, not the fact
+7. Body in short sentences or bullets, addressing the user by name. Say when the item applies, why, and the project if specific. Mark untested ideas as untested.
+8. Full dates use Notion date mentions, for example `<date start="2026-01-01" />`. Never invent a day for a month- or year-only date.
+9. After create or update, return the page link and `fetch` the page to verify. Search indexing can lag; do not treat a missing search hit as a failed write. Await async write completion.
+10. If a write fails, say so. Never claim it was saved.
+
+## Deduplication
+
+- Same topic, synonymous title, or restated preference all mean one memory.
+- New information that refines or corrects an existing entry updates that page; only a genuinely new topic creates one.
+- Read the full page before guessing from the title.
+- Repeating the same save request in one session creates nothing and, when content is unchanged, updates nothing.
+- Keep source links and original dates; do not bulk-rename, reorder, or reorganize existing memories.
+
+## When to update the About page
+
+Only when the user's overall picture changes:
+
+- Role or long-term goals change.
+- An important project starts or ends.
+- A strong new working preference appears, or an explicit correction.
+- Several memories together change the summary of the user.
+
+Project detail stays in individual memories. Do not update About on every save.
+
+Use targeted `update_content`, preserve text the user wrote, keep it under roughly 300 words, and link the memories behind each point. Use these sections:
+
+## Role
+## Current work
+## Working preferences
+
+Unless the user asks, do not record health, financial, or relationship information.
+
+## Known preferences for this workspace
+
+<!-- Replace this block with the user's actual confirmed preferences.
+     Ship the template empty: do not copy someone else's preferences. -->
+
+- <preference one>
+- <preference two>
